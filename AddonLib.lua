@@ -12,14 +12,15 @@ local CFG = {
     MainColor = Color3.fromRGB(14, 14, 14),
     SecondaryColor = Color3.fromRGB(26, 26, 26),
     AccentColor = Color3.fromRGB(0, 0, 139),
-    TextColor = Color3.fromRGB(200, 200, 200),
-    TextDark = Color3.fromRGB(120, 120, 120),
+    TextColor = Color3.fromRGB(220, 220, 220),
+    TextDark = Color3.fromRGB(140, 140, 140),
     StrokeColor = Color3.fromRGB(40, 40, 40),
-    Font = Enum.Font.Code,
-    BaseSize = Vector2.new(600, 450)
+    Font = Enum.Font.GothamSemibold,
+    BaseSize = Vector2.new(640, 480)
 }
 
 local Library = { Flags = {}, Connections = {}, Unloaded = false }
+local ConfigFolder = nil
 
 local function Create(class, props, children)
     local inst = Instance.new(class)
@@ -36,9 +37,13 @@ local function GetTextSize(text, size, font)
     return game:GetService("TextService"):GetTextSize(text, size, font, Vector2.new(10000, 10000))
 end
 
+local function DetectMobile()
+    return UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+end
+
 local ScreenGui = Create("ScreenGui", {
     Name = "apex.lua",
-    Parent = game:GetService("CoreGui"),
+    Parent = CoreGui,
     ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
     ResetOnSpawn = false,
     IgnoreGuiInset = true
@@ -56,6 +61,30 @@ end
 
 workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
 UpdateScale()
+
+local Watermark = Create("Frame", {
+    Parent = ScreenGui,
+    Size = UDim2.new(0, 0, 0, 24),
+    Position = UDim2.new(0, 15, 1, -15),
+    AnchorPoint = Vector2.new(0, 1),
+    BackgroundColor3 = CFG.MainColor,
+    BorderSizePixel = 0,
+    ClipsDescendants = true
+}, {
+    Create("UIStroke", { Color = CFG.AccentColor, Thickness = 1, Transparency = 0.6 }),
+    Create("UICorner", { CornerRadius = UDim.new(0, 4) }),
+    Create("UIPadding", { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8) }),
+    Create("TextLabel", {
+        Text = "apex.lua | addon",
+        TextColor3 = CFG.TextColor,
+        TextSize = 13,
+        Font = CFG.Font,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        TextXAlignment = Enum.TextXAlignment.Center
+    })
+})
+Tween(Watermark, {Size = UDim2.new(0, GetTextSize("apex.lua | addon", 13, CFG.Font).X + 20, 0, 24)}, 0.3)
 
 local NotificationContainer = Create("Frame", {
     Parent = ScreenGui,
@@ -88,7 +117,7 @@ function Library:Notify(msg, type)
             Text = msg,
             TextColor3 = CFG.TextColor,
             Font = CFG.Font,
-            TextSize = 12,
+            TextSize = 13,
             Size = UDim2.new(1, -10, 1, 0),
             Position = UDim2.new(0, 10, 0, 0),
             BackgroundTransparency = 1,
@@ -108,7 +137,7 @@ local TooltipLabel = Create("TextLabel", {
     Size = UDim2.new(0, 0, 0, 20),
     BackgroundColor3 = CFG.SecondaryColor,
     TextColor3 = CFG.TextColor,
-    TextSize = 11,
+    TextSize = 12,
     Font = CFG.Font,
     BorderSizePixel = 0,
     Visible = false,
@@ -121,7 +150,7 @@ local TooltipLabel = Create("TextLabel", {
 local function AddTooltip(obj, text)
     obj.MouseEnter:Connect(function()
         TooltipLabel.Text = text
-        TooltipLabel.Size = UDim2.fromOffset(GetTextSize(text, 11, CFG.Font).X + 12, 20)
+        TooltipLabel.Size = UDim2.fromOffset(GetTextSize(text, 12, CFG.Font).X + 12, 20)
         TooltipLabel.Visible = true
     end)
     obj.MouseLeave:Connect(function()
@@ -140,7 +169,7 @@ local MainFrame = Create("Frame", {
     Name = "MainFrame",
     Parent = ScreenGui,
     Size = UDim2.fromOffset(CFG.BaseSize.X, CFG.BaseSize.Y),
-    Position = UDim2.new(0.5, -300, 0.5, -225),
+    Position = UDim2.new(0.5, -320, 0.5, -240),
     BackgroundColor3 = CFG.MainColor,
     BorderSizePixel = 0
 }, {
@@ -176,9 +205,34 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+if DetectMobile() then
+    local ToggleBtn = Create("TextButton", {
+        Parent = ScreenGui,
+        Size = UDim2.new(0, 40, 0, 40),
+        Position = UDim2.new(1, -20, 1, -20),
+        AnchorPoint = Vector2.new(1, 1),
+        BackgroundColor3 = CFG.MainColor,
+        Text = "▲",
+        TextSize = 20,
+        TextColor3 = CFG.AccentColor,
+        Font = CFG.Font,
+        BorderSizePixel = 0,
+        ZIndex = 150
+    }, {
+        Create("UIStroke", { Color = CFG.AccentColor, Thickness = 1 }),
+        Create("UICorner", { CornerRadius = UDim.new(1, 0) })
+    })
+    local visible = true
+    ToggleBtn.MouseButton1Click:Connect(function()
+        visible = not visible
+        MainFrame.Visible = visible
+        ToggleBtn.Text = visible and "▲" or "▼"
+    end)
+end
+
 local TopBar = Create("Frame", {
     Parent = MainFrame,
-    Size = UDim2.new(1, 0, 0, 30),
+    Size = UDim2.new(1, 0, 0, 32),
     BackgroundColor3 = CFG.MainColor,
     BorderSizePixel = 0
 }, {
@@ -193,11 +247,11 @@ local TitleLabel = Create("TextLabel", {
     Parent = TopBar,
     Text = "apex.lua | addon",
     TextColor3 = CFG.TextDark,
-    TextSize = 13,
+    TextSize = 14,
     Font = CFG.Font,
     BackgroundTransparency = 1,
     Size = UDim2.new(0, 200, 1, 0),
-    Position = UDim2.new(0, 10, 0, 0),
+    Position = UDim2.new(0, 12, 0, 0),
     TextXAlignment = Enum.TextXAlignment.Left,
     RichText = true
 })
@@ -228,26 +282,25 @@ end)
 
 local ContentContainer = Create("Frame", {
     Parent = MainFrame,
-    Size = UDim2.new(1, 0, 1, -30),
-    Position = UDim2.new(0, 0, 0, 30),
+    Size = UDim2.new(1, 0, 1, -32),
+    Position = UDim2.new(0, 0, 0, 32),
     BackgroundTransparency = 1
 })
 
 local Sidebar = Create("Frame", {
     Parent = ContentContainer,
-    Size = UDim2.new(0, 60, 1, 0),
+    Size = UDim2.new(0, 65, 1, 0),
     BackgroundColor3 = Color3.fromRGB(17, 17, 17),
     BorderSizePixel = 0,
     Position = UDim2.new(0, 0, 0, 0)
 }, {
     Create("Frame", {
-        Size = UDim2.new(0, 1, 0, 0),
+        Size = UDim2.new(0, 1, 1, 0),
         Position = UDim2.new(1, 0, 0, 0),
-        BackgroundTransparency = 1,
         BackgroundColor3 = CFG.StrokeColor
     }),
     Create("UIListLayout", {
-        Padding = UDim.new(0, 10),
+        Padding = UDim.new(0, 12),
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
         VerticalAlignment = Enum.VerticalAlignment.Top
     }),
@@ -256,8 +309,8 @@ local Sidebar = Create("Frame", {
 
 local PagesContainer = Create("Frame", {
     Parent = ContentContainer,
-    Size = UDim2.new(1, -60, 1, 0),
-    Position = UDim2.new(0, 60, 0, 0),
+    Size = UDim2.new(1, -65, 1, 0),
+    Position = UDim2.new(0, 65, 0, 0),
     BackgroundTransparency = 1
 })
 
@@ -267,55 +320,46 @@ local CurrentTab = nil
 function Library:Tab(name, icon)
     local TabButton = Create("TextButton", {
         Parent = Sidebar,
-        Size = UDim2.new(0, 40, 0, 40),
+        Size = UDim2.new(0, 44, 0, 44),
         BackgroundColor3 = CFG.MainColor,
         Text = "",
-        TextSize = 20,
-        TextColor3 = CFG.TextDark,
-        Font = CFG.Font,
-        AutoButtonColor = false
+        AutoButtonColor = false,
+        BorderSizePixel = 0
     }, {
-        Create("ImageLabel", {
+        Create("UICorner", { CornerRadius = UDim.new(0, 6) })
+    })
+
+    if icon then
+        local IconLabel = Create("ImageLabel", {
+            Parent = TabButton,
             Name = "Icon",
             Size = UDim2.new(0.6, 0, 0.6, 0),
             Position = UDim2.new(0.2, 0, 0.2, 0),
             BackgroundTransparency = 1,
             Image = "rbxassetid://" .. icon,
             ImageColor3 = CFG.TextDark
-        }),
-        Create("UICorner", { CornerRadius = UDim.new(0, 6) })
-    })
+        })
+        TabButton.Icon = IconLabel
+    else
+        local TabText = Create("TextLabel", {
+            Parent = TabButton,
+            Name = "TabText",
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Text = name,
+            TextColor3 = CFG.TextDark,
+            Font = CFG.Font,
+            TextSize = 14,
+            TextScaled = true
+        })
+        TabButton.TabText = TabText
+    end
 
-    local PageFrame = Create("ScrollingFrame", {
+    local PageFrame = Create("Frame", {
         Parent = PagesContainer,
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Visible = false,
-        ScrollBarThickness = 2,
-        ScrollBarImageColor3 = CFG.AccentColor,
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y
-    }, {
-        Create("UIPadding", {
-            PaddingTop = UDim.new(0, 15),
-            PaddingLeft = UDim.new(0, 15),
-            PaddingRight = UDim.new(0, 15),
-            PaddingBottom = UDim.new(0, 15)
-        }),
-        Create("UIGridLayout", {
-            CellSize = UDim2.new(0.48, 0, 0, 0),
-            CellPadding = UDim2.new(0.02, 0, 0, 10),
-            FillDirectionMaxCells = 2
-        })
-    })
-
-    PageFrame:ClearAllChildren()
-    local Padding = Create("UIPadding", {
-        Parent = PageFrame,
-        PaddingTop = UDim.new(0, 15),
-        PaddingLeft = UDim.new(0, 15),
-        PaddingRight = UDim.new(0, 15),
-        PaddingBottom = UDim.new(0, 15)
+        Visible = false
     })
 
     local LeftCol = Create("Frame", {
@@ -337,17 +381,32 @@ function Library:Tab(name, icon)
 
     TabButton.MouseButton1Click:Connect(function()
         for _, t in pairs(Tabs) do
-            Tween(t.Btn, { TextColor3 = CFG.TextDark, BackgroundColor3 = CFG.MainColor }, 0.2)
+            Tween(t.Btn, { BackgroundColor3 = CFG.MainColor }, 0.2)
+            if t.Btn:FindFirstChild("Icon") then
+                t.Btn.Icon.ImageColor3 = CFG.TextDark
+            elseif t.Btn:FindFirstChild("TabText") then
+                t.Btn.TabText.TextColor3 = CFG.TextDark
+            end
             t.Page.Visible = false
         end
-        Tween(TabButton, { TextColor3 = CFG.AccentColor, BackgroundColor3 = CFG.SecondaryColor }, 0.2)
+        Tween(TabButton, { BackgroundColor3 = CFG.SecondaryColor }, 0.2)
+        if TabButton:FindFirstChild("Icon") then
+            TabButton.Icon.ImageColor3 = CFG.AccentColor
+        elseif TabButton:FindFirstChild("TabText") then
+            TabButton.TabText.TextColor3 = CFG.AccentColor
+        end
         PageFrame.Visible = true
         CurrentTab = PageFrame
     end)
 
     table.insert(Tabs, { Btn = TabButton, Page = PageFrame })
     if #Tabs == 1 then
-        Tween(TabButton, { TextColor3 = CFG.AccentColor, BackgroundColor3 = CFG.SecondaryColor }, 0.2)
+        TabButton.BackgroundColor3 = CFG.SecondaryColor
+        if TabButton:FindFirstChild("Icon") then
+            TabButton.Icon.ImageColor3 = CFG.AccentColor
+        elseif TabButton:FindFirstChild("TabText") then
+            TabButton.TabText.TextColor3 = CFG.AccentColor
+        end
         PageFrame.Visible = true
     end
 
@@ -387,8 +446,8 @@ function Library:Tab(name, icon)
                 Position = UDim2.new(0, 8, 0, 0),
                 BackgroundTransparency = 1,
                 TextColor3 = CFG.TextColor,
-                Font = Enum.Font.GothamBold,
-                TextSize = 11,
+                Font = CFG.Font,
+                TextSize = 12,
                 TextXAlignment = Enum.TextXAlignment.Left
             }),
             Create("Frame", {
@@ -419,22 +478,27 @@ function Library:Tab(name, icon)
 
         local ItemFuncs = {}
 
+        local function RegisterFlag(name, value, setter, getter)
+            table.insert(Library.Flags, {Name = name, Value = value, Set = setter, Get = getter})
+        end
+
         function ItemFuncs:Toggle(cfg)
             local Enabled = false
             local Frame = Create("TextButton", {
                 Parent = Content,
-                Size = UDim2.new(1, 0, 0, 20),
+                Size = UDim2.new(1, 0, 0, 24),
                 BackgroundTransparency = 1,
                 Text = ""
             })
             local Box = Create("Frame", {
                 Parent = Frame,
-                Size = UDim2.new(0, 12, 0, 12),
-                Position = UDim2.new(0, 0, 0.5, -6),
+                Size = UDim2.new(0, 14, 0, 14),
+                Position = UDim2.new(0, 0, 0.5, -7),
                 BackgroundColor3 = CFG.SecondaryColor,
                 BorderSizePixel = 0
             }, {
-                Create("UIStroke", { Color = CFG.StrokeColor })
+                Create("UIStroke", { Color = CFG.StrokeColor }),
+                Create("UICorner", { CornerRadius = UDim.new(0, 3) })
             })
             local Check = Create("Frame", {
                 Parent = Box,
@@ -443,32 +507,40 @@ function Library:Tab(name, icon)
                 AnchorPoint = Vector2.new(0.5, 0.5),
                 BackgroundColor3 = CFG.AccentColor,
                 BackgroundTransparency = 1
+            }, {
+                Create("UICorner", { CornerRadius = UDim.new(0, 2) })
             })
             local Label = Create("TextLabel", {
                 Parent = Frame,
                 Text = cfg.Name,
-                TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextColor3 = cfg.Risky and Color3.fromRGB(200, 80, 80) or CFG.TextDark,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 18, 0, 0),
-                Size = UDim2.new(1, -18, 1, 0),
+                Position = UDim2.new(0, 20, 0, 0),
+                Size = UDim2.new(1, -20, 1, 0),
                 TextXAlignment = Enum.TextXAlignment.Left
             })
-            if cfg.Risky then
-                Label.TextColor3 = Color3.fromRGB(200, 80, 80)
-            end
             if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
 
-            local function Update()
-                Enabled = not Enabled
+            local function Update(val)
+                if val == nil then val = not Enabled end
+                Enabled = val
                 Tween(Check, { BackgroundTransparency = Enabled and 0 or 1 }, 0.1)
                 Tween(Label, { TextColor3 = Enabled and CFG.TextColor or (cfg.Risky and Color3.fromRGB(200, 80, 80) or CFG.TextDark) }, 0.1)
                 if cfg.Callback then cfg.Callback(Enabled) end
+                if cfg.Flag then
+                    cfg.Flag.Value = Enabled
+                    Library:SaveFlag(cfg.Flag.Name, Enabled)
+                end
             end
 
-            Frame.MouseButton1Click:Connect(Update)
-            return { Set = function(v) if v ~= Enabled then Update() end end }
+            if cfg.Flag then
+                RegisterFlag(cfg.Flag.Name, Enabled, Update, function() return Enabled end)
+            end
+
+            Frame.MouseButton1Click:Connect(function() Update() end)
+            return { Set = function(v) if v ~= Enabled then Update(v) end end }
         end
 
         function ItemFuncs:Slider(cfg)
@@ -476,33 +548,33 @@ function Library:Tab(name, icon)
             local DraggingSlider = false
             local Frame = Create("Frame", {
                 Parent = Content,
-                Size = UDim2.new(1, 0, 0, 32),
+                Size = UDim2.new(1, 0, 0, 36),
                 BackgroundTransparency = 1
             })
             local Label = Create("TextLabel", {
                 Parent = Frame,
                 Text = cfg.Name,
                 TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 15),
+                Size = UDim2.new(1, 0, 0, 16),
                 TextXAlignment = Enum.TextXAlignment.Left
             })
             local ValueLabel = Create("TextLabel", {
                 Parent = Frame,
                 Text = Value .. (cfg.Unit or ""),
                 TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 15),
+                Size = UDim2.new(1, 0, 0, 16),
                 TextXAlignment = Enum.TextXAlignment.Right
             })
             local SliderBG = Create("Frame", {
                 Parent = Frame,
-                Size = UDim2.new(1, 0, 0, 6),
-                Position = UDim2.new(0, 0, 0, 20),
+                Size = UDim2.new(1, 0, 0, 8),
+                Position = UDim2.new(0, 0, 0, 22),
                 BackgroundColor3 = CFG.SecondaryColor,
                 BorderSizePixel = 0
             }, {
@@ -517,15 +589,24 @@ function Library:Tab(name, icon)
                 Create("UICorner", { CornerRadius = UDim.new(1, 0) })
             })
 
+            local function UpdateVal(val)
+                Value = math.clamp(val or Value, cfg.Min, cfg.Max)
+                local percent = (Value - cfg.Min) / (cfg.Max - cfg.Min)
+                Fill.Size = UDim2.new(percent, 0, 1, 0)
+                ValueLabel.Text = Value .. (cfg.Unit or "")
+                if cfg.Callback then cfg.Callback(Value) end
+                if cfg.Flag then
+                    cfg.Flag.Value = Value
+                    Library:SaveFlag(cfg.Flag.Name, Value)
+                end
+            end
+
             local function Update(input)
                 local SizeX = SliderBG.AbsoluteSize.X
                 local PosX = SliderBG.AbsolutePosition.X
                 local InputX = input.Position.X
                 local Percent = math.clamp((InputX - PosX) / SizeX, 0, 1)
-                Value = math.floor(cfg.Min + (cfg.Max - cfg.Min) * Percent)
-                Fill.Size = UDim2.new(Percent, 0, 1, 0)
-                ValueLabel.Text = Value .. (cfg.Unit or "")
-                if cfg.Callback then cfg.Callback(Value) end
+                UpdateVal(math.floor(cfg.Min + (cfg.Max - cfg.Min) * Percent))
             end
 
             Frame.InputBegan:Connect(function(input)
@@ -545,8 +626,11 @@ function Library:Tab(name, icon)
                 end
             end)
 
-            local percent = (Value - cfg.Min) / (cfg.Max - cfg.Min)
-            Fill.Size = UDim2.new(percent, 0, 1, 0)
+            UpdateVal(cfg.Default)
+
+            if cfg.Flag then
+                RegisterFlag(cfg.Flag.Name, Value, UpdateVal, function() return Value end)
+            end
             if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
         end
 
@@ -555,7 +639,7 @@ function Library:Tab(name, icon)
             local Current = cfg.Default or cfg.Options[1]
             local Frame = Create("Frame", {
                 Parent = Content,
-                Size = UDim2.new(1, 0, 0, 36),
+                Size = UDim2.new(1, 0, 0, 40),
                 BackgroundTransparency = 1,
                 ZIndex = 20
             })
@@ -563,16 +647,16 @@ function Library:Tab(name, icon)
                 Parent = Frame,
                 Text = cfg.Name,
                 TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 15),
+                Size = UDim2.new(1, 0, 0, 16),
                 TextXAlignment = Enum.TextXAlignment.Left
             })
             local MainBox = Create("TextButton", {
                 Parent = Frame,
-                Size = UDim2.new(1, 0, 0, 20),
-                Position = UDim2.new(0, 0, 0, 16),
+                Size = UDim2.new(1, 0, 0, 22),
+                Position = UDim2.new(0, 0, 0, 18),
                 BackgroundColor3 = CFG.SecondaryColor,
                 BorderSizePixel = 0,
                 Text = "",
@@ -587,7 +671,7 @@ function Library:Tab(name, icon)
                     Position = UDim2.new(0, 5, 0, 0),
                     BackgroundTransparency = 1,
                     TextColor3 = CFG.TextColor,
-                    TextSize = 11,
+                    TextSize = 13,
                     Font = CFG.Font,
                     TextXAlignment = Enum.TextXAlignment.Left
                 }),
@@ -597,7 +681,7 @@ function Library:Tab(name, icon)
                     Position = UDim2.new(1, -20, 0, 0),
                     BackgroundTransparency = 1,
                     TextColor3 = CFG.TextDark,
-                    TextSize = 10
+                    TextSize = 12
                 })
             })
             local ListFrame = Create("ScrollingFrame", {
@@ -617,20 +701,33 @@ function Library:Tab(name, icon)
                 Create("UICorner", { CornerRadius = UDim.new(0, 3) })
             })
 
+            local function UpdateSelection(opt)
+                Current = opt
+                MainBox.Val.Text = opt
+                for _, btn in ipairs(ListFrame:GetChildren()) do
+                    if btn:IsA("TextButton") then
+                        btn.TextColor3 = (btn.Text == opt) and CFG.AccentColor or CFG.TextDark
+                    end
+                end
+                if cfg.Callback then cfg.Callback(opt) end
+                if cfg.Flag then
+                    cfg.Flag.Value = opt
+                    Library:SaveFlag(cfg.Flag.Name, opt)
+                end
+            end
+
             for _, opt in pairs(cfg.Options) do
                 local Btn = Create("TextButton", {
                     Parent = ListFrame,
-                    Size = UDim2.new(1, 0, 0, 20),
+                    Size = UDim2.new(1, 0, 0, 22),
                     BackgroundTransparency = 1,
                     Text = opt,
                     TextColor3 = (opt == Current) and CFG.AccentColor or CFG.TextDark,
-                    TextSize = 11,
+                    TextSize = 13,
                     Font = CFG.Font
                 })
                 Btn.MouseButton1Click:Connect(function()
-                    Current = opt
-                    MainBox.Val.Text = opt
-                    if cfg.Callback then cfg.Callback(opt) end
+                    UpdateSelection(opt)
                     Expanded = false
                     Tween(ListFrame, { Size = UDim2.new(1, 0, 0, 0) }, 0.1)
                     task.wait(0.1)
@@ -642,13 +739,17 @@ function Library:Tab(name, icon)
                 Expanded = not Expanded
                 if Expanded then
                     ListFrame.Visible = true
-                    Tween(ListFrame, { Size = UDim2.new(1, 0, 0, math.min(#cfg.Options * 20, 100)) }, 0.1)
+                    Tween(ListFrame, { Size = UDim2.new(1, 0, 0, math.min(#cfg.Options * 22, 120)) }, 0.1)
                 else
                     Tween(ListFrame, { Size = UDim2.new(1, 0, 0, 0) }, 0.1)
                     task.wait(0.1)
                     ListFrame.Visible = false
                 end
             end)
+
+            if cfg.Flag then
+                RegisterFlag(cfg.Flag.Name, Current, UpdateSelection, function() return Current end)
+            end
             if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
         end
 
@@ -657,7 +758,7 @@ function Library:Tab(name, icon)
             local Opened = false
             local Frame = Create("Frame", {
                 Parent = Content,
-                Size = UDim2.new(1, 0, 0, 20),
+                Size = UDim2.new(1, 0, 0, 24),
                 BackgroundTransparency = 1,
                 ZIndex = 15
             })
@@ -665,7 +766,7 @@ function Library:Tab(name, icon)
                 Parent = Frame,
                 Text = cfg.Name,
                 TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
                 Size = UDim2.new(0.6, 0, 1, 0),
@@ -673,7 +774,7 @@ function Library:Tab(name, icon)
             })
             local Preview = Create("TextButton", {
                 Parent = Frame,
-                Size = UDim2.new(0, 30, 0, 14),
+                Size = UDim2.new(0, 34, 0, 16),
                 AnchorPoint = Vector2.new(1, 0.5),
                 Position = UDim2.new(1, 0, 0.5, 0),
                 BackgroundColor3 = Color,
@@ -719,7 +820,7 @@ function Library:Tab(name, icon)
             })
             local Cursor = Create("Frame", {
                 Parent = SatValPanel,
-                Size = UDim2.new(0, 4, 0, 4),
+                Size = UDim2.new(0, 5, 0, 5),
                 BackgroundColor3 = Color3.new(1, 1, 1),
                 AnchorPoint = Vector2.new(0.5, 0.5)
             }, {
@@ -727,7 +828,7 @@ function Library:Tab(name, icon)
             })
             local HueSlider = Create("TextButton", {
                 Parent = PickerFrame,
-                Size = UDim2.new(1, -20, 0, 10),
+                Size = UDim2.new(1, -20, 0, 12),
                 Position = UDim2.new(0, 10, 0, 120),
                 Text = "",
                 AutoButtonColor = false
@@ -755,6 +856,15 @@ function Library:Tab(name, icon)
                 SatValPanel.BackgroundColor3 = Color3.fromHSV(H, 1, 1)
                 Cursor.Position = UDim2.new(S, 0, 1 - V, 0)
                 if cfg.Callback then cfg.Callback(Color) end
+                if cfg.Flag then
+                    cfg.Flag.Value = {H, S, V}
+                    Library:SaveFlag(cfg.Flag.Name, {H, S, V})
+                end
+            end
+
+            local function SetColorFromHSV(h, s, v)
+                H, S, V = h, s, v
+                UpdateColor()
             end
 
             SatValPanel.InputBegan:Connect(function(inp)
@@ -801,35 +911,39 @@ function Library:Tab(name, icon)
                     Tween(PickerFrame, { Size = UDim2.new(0, 180, 0, 0) }, 0.2)
                 end
             end)
+
+            if cfg.Flag then
+                RegisterFlag(cfg.Flag.Name, {H, S, V}, function(val) SetColorFromHSV(val[1], val[2], val[3]) end, function() return {H, S, V} end)
+            end
             if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
         end
 
         function ItemFuncs:Textbox(cfg)
             local Frame = Create("Frame", {
                 Parent = Content,
-                Size = UDim2.new(1, 0, 0, 35),
+                Size = UDim2.new(1, 0, 0, 38),
                 BackgroundTransparency = 1
             })
             Create("TextLabel", {
                 Parent = Frame,
                 Text = cfg.Name,
                 TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 0, 15),
+                Size = UDim2.new(1, 0, 0, 16),
                 TextXAlignment = Enum.TextXAlignment.Left
             })
             local Box = Create("TextBox", {
                 Parent = Frame,
-                Size = UDim2.new(1, 0, 0, 20),
-                Position = UDim2.new(0, 0, 0, 15),
+                Size = UDim2.new(1, 0, 0, 22),
+                Position = UDim2.new(0, 0, 0, 16),
                 BackgroundColor3 = CFG.SecondaryColor,
                 TextColor3 = CFG.TextColor,
                 PlaceholderText = cfg.Placeholder or "...",
-                Text = "",
+                Text = cfg.Default or "",
                 Font = CFG.Font,
-                TextSize = 11,
+                TextSize = 13,
                 BorderSizePixel = 0
             }, {
                 Create("UIStroke", { Color = CFG.StrokeColor }),
@@ -838,7 +952,14 @@ function Library:Tab(name, icon)
             })
             Box.FocusLost:Connect(function()
                 if cfg.Callback then cfg.Callback(Box.Text) end
+                if cfg.Flag then
+                    cfg.Flag.Value = Box.Text
+                    Library:SaveFlag(cfg.Flag.Name, Box.Text)
+                end
             end)
+            if cfg.Flag then
+                RegisterFlag(cfg.Flag.Name, Box.Text, function(val) Box.Text = val end, function() return Box.Text end)
+            end
             if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
         end
 
@@ -847,14 +968,14 @@ function Library:Tab(name, icon)
             local Waiting = false
             local Frame = Create("Frame", {
                 Parent = Content,
-                Size = UDim2.new(1, 0, 0, 20),
+                Size = UDim2.new(1, 0, 0, 24),
                 BackgroundTransparency = 1
             })
             Create("TextLabel", {
                 Parent = Frame,
                 Text = cfg.Name,
                 TextColor3 = CFG.TextDark,
-                TextSize = 11,
+                TextSize = 13,
                 Font = CFG.Font,
                 BackgroundTransparency = 1,
                 Size = UDim2.new(0.6, 0, 1, 0),
@@ -862,13 +983,13 @@ function Library:Tab(name, icon)
             })
             local KeyLabel = Create("TextButton", {
                 Parent = Frame,
-                Size = UDim2.new(0, 60, 0, 14),
-                Position = UDim2.new(1, 0, 0.5, -7),
+                Size = UDim2.new(0, 64, 0, 16),
+                Position = UDim2.new(1, 0, 0.5, -8),
                 AnchorPoint = Vector2.new(1, 0.5),
                 BackgroundColor3 = CFG.SecondaryColor,
                 Text = tostring(Key):gsub("Enum.KeyCode.", ""),
                 TextColor3 = CFG.TextColor,
-                TextSize = 10,
+                TextSize = 12,
                 Font = CFG.Font,
                 BorderSizePixel = 0,
                 AutoButtonColor = false
@@ -876,6 +997,16 @@ function Library:Tab(name, icon)
                 Create("UIStroke", { Color = CFG.StrokeColor }),
                 Create("UICorner", { CornerRadius = UDim.new(0, 3) })
             })
+
+            local function SetKey(k)
+                Key = k
+                KeyLabel.Text = tostring(Key):gsub("Enum.KeyCode.", "")
+                if cfg.Callback then cfg.Callback(Key) end
+                if cfg.Flag then
+                    cfg.Flag.Value = tostring(Key)
+                    Library:SaveFlag(cfg.Flag.Name, tostring(Key))
+                end
+            end
 
             KeyLabel.MouseButton1Click:Connect(function()
                 if Waiting then return end
@@ -887,9 +1018,7 @@ function Library:Tab(name, icon)
                 connection = UserInputService.InputBegan:Connect(function(inp, gpe)
                     if gpe then return end
                     if inp.KeyCode ~= Enum.KeyCode.Unknown then
-                        Key = inp.KeyCode
-                        KeyLabel.Text = tostring(Key):gsub("Enum.KeyCode.", "")
-                        if cfg.Callback then cfg.Callback(Key) end
+                        SetKey(inp.KeyCode)
                         connection:Disconnect()
                         KeyLabel.AutoButtonColor = false
                         Waiting = false
@@ -901,6 +1030,10 @@ function Library:Tab(name, icon)
                     end
                 end)
             end)
+
+            if cfg.Flag then
+                RegisterFlag(cfg.Flag.Name, tostring(Key), function(val) SetKey(Enum.KeyCode[val]) end, function() return tostring(Key) end)
+            end
             if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
         end
 
@@ -910,7 +1043,7 @@ function Library:Tab(name, icon)
     function GroupFunctions:Button(cfg)
         local Frame = Create("TextButton", {
             Parent = Content,
-            Size = UDim2.new(1, 0, 0, 20),
+            Size = UDim2.new(1, 0, 0, 24),
             BackgroundTransparency = 1,
             Text = ""
         })
@@ -918,11 +1051,10 @@ function Library:Tab(name, icon)
             Parent = Frame,
             Text = cfg.Name,
             TextColor3 = CFG.TextColor,
-            TextSize = 11,
+            TextSize = 13,
             Font = CFG.Font,
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, -18, 1, 0),
-            Position = UDim2.new(0, 18, 0, 0),
+            Size = UDim2.new(1, 0, 1, 0),
             TextXAlignment = Enum.TextXAlignment.Left
         })
         if cfg.Tooltip then AddTooltip(Frame, cfg.Tooltip) end
@@ -934,14 +1066,14 @@ function Library:Tab(name, icon)
     function GroupFunctions:Label(cfg)
         local Frame = Create("Frame", {
             Parent = Content,
-            Size = UDim2.new(1, 0, 0, 15),
+            Size = UDim2.new(1, 0, 0, 18),
             BackgroundTransparency = 1
         })
         Create("TextLabel", {
             Parent = Frame,
             Text = cfg.Name,
             TextColor3 = cfg.Color or CFG.TextColor,
-            TextSize = 11,
+            TextSize = 13,
             Font = CFG.Font,
             BackgroundTransparency = 1,
             Size = UDim2.new(1, 0, 1, 0),
@@ -952,5 +1084,55 @@ function Library:Tab(name, icon)
 
     return GroupFunctions
 end
+
+function Library:InitConfig()
+    local success, result = pcall(function()
+        if not Player:FindFirstChild("apex_config") then
+            local folder = Instance.new("Folder")
+            folder.Name = "apex_config"
+            folder.Parent = Player
+            ConfigFolder = folder
+        else
+            ConfigFolder = Player:FindFirstChild("apex_config")
+        end
+    end)
+    if not success then
+        warn("Config init failed: " .. tostring(result))
+    end
+end
+
+function Library:SaveFlag(name, value)
+    if not ConfigFolder then return end
+    local encoded = HttpService:JSONEncode(value)
+    local found = ConfigFolder:FindFirstChild(name)
+    if found and found:IsA("StringValue") then
+        found.Value = encoded
+    else
+        local sv = Instance.new("StringValue")
+        sv.Name = name
+        sv.Value = encoded
+        sv.Parent = ConfigFolder
+    end
+end
+
+function Library:LoadConfig()
+    if not ConfigFolder then return end
+    for _, flag in ipairs(Library.Flags) do
+        local saved = ConfigFolder:FindFirstChild(flag.Name)
+        if saved and saved:IsA("StringValue") then
+            local success, decoded = pcall(HttpService.JSONDecode, HttpService, saved.Value)
+            if success then
+                if type(decoded) == "table" and flag.Set then
+                    flag.Set(decoded)
+                elseif flag.Set then
+                    flag.Set(decoded)
+                end
+            end
+        end
+    end
+end
+
+Library:InitConfig()
+Library:LoadConfig()
 
 return Library

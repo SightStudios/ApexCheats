@@ -94,7 +94,11 @@ local BaseURL = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/refs/hea
 local CustomImageManager = {}
 local CustomImageManagerAssets = {
     Cursor = {
-    
+    RobloxId = nil,
+        Path = nil,
+        URL = BaseURL .. nil,
+
+        Id = nil,
     },
 
     DropdownArrow = {

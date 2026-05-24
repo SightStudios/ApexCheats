@@ -232,13 +232,13 @@ local Library = {
 
     -- colors and font --
     FontColor = Color3.fromRGB(255, 255, 255);
-    MainColor = Color3.fromRGB(28, 28, 28);
-    BackgroundColor = Color3.fromRGB(20, 20, 20);
+    MainColor = Color3.fromRGB(30, 30, 30);
+    BackgroundColor = Color3.fromRGB(35, 35, 35);
 
-    AccentColor = Color3.fromRGB(0, 85, 255);
+    AccentColor = Color3.fromRGB(0, 41, 189);
     DisabledAccentColor = Color3.fromRGB(142, 142, 142);
 
-    OutlineColor = Color3.fromRGB(50, 50, 50);
+    OutlineColor = Color3.fromRGB(20, 20, 20);
     DisabledOutlineColor = Color3.fromRGB(70, 70, 70);
 
     DisabledTextColor = Color3.fromRGB(142, 142, 142);

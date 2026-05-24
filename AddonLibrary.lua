@@ -94,9 +94,7 @@ local BaseURL = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/refs/hea
 local CustomImageManager = {}
 local CustomImageManagerAssets = {
     Cursor = {
-        RobloxId = 9619665977,
-        Path = "Apex/assets/Cursor.png",
-        URL = BaseURL .. "assets/Cursor.png",
+       
 
         Id = nil,
     },

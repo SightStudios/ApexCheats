@@ -94,9 +94,7 @@ local BaseURL = "https://raw.githubusercontent.com/mstudio45/LinoriaLib/refs/hea
 local CustomImageManager = {}
 local CustomImageManagerAssets = {
     Cursor = {
-       
-
-        Id = nil,
+    
     },
 
     DropdownArrow = {
